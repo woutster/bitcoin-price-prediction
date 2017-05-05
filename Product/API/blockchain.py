@@ -69,7 +69,7 @@ def getMarketCapetalization():
 	url = "https://api.blockchain.info/charts/market-cap?start=2016-01-01&format=json"
 	return get_response(url)
 
-def processData(save):
+def process_data(save):
 	
 	marketPriceBTCInUSD = getMarketPriceBTCInUSD()
 	tradeVolume = getTradeVolume()
@@ -107,8 +107,8 @@ def processData(save):
 			totalAdressesTransactions.get_value(index, 'y'), 
 			numberOfcirculatingBitcoins.get_value(index, 'y'), 
 			marketCapitalization.get_value(index, 'y')]))
+	df = pd.DataFrame(data)
 	if save:
-		df_csv = pd.DataFrame(data)
-		df_csv.to_csv(path_or_buf='blockchain_api_features.csv', sep=',', header=False, index=False)
-
-processData(True)
+		df.to_csv(path_or_buf='blockchain_api_features.csv', sep=',', header=False, index=False)
+	else:
+		return df
