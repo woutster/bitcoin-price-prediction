@@ -38,7 +38,6 @@ def get_bitcoin_data(limit):
 def process_data(limit, save):
 	processed_data = ['Date', 'NumberOfPosts', 'AveragePolarity', 'AverageSubjectivity']
 	data = get_bitcoin_data_test()
-	import pdb; pdb.set_trace()
 	for index, _ in data.iterrows():
 		polarity = np.array(data.get_value(index, 'Polarity')).astype(np.float)
 		subjectivity = np.array(data.get_value(index, 'Subjectivity')).astype(np.float)
@@ -51,7 +50,7 @@ def process_data(limit, save):
 					columns=processed_data[0,1:])
 	df = df[~df.index.duplicated(keep='first')]
 	if save:
-		df.to_csv(path_or_buf='reddit_api_features.csv', sep=',', header=True, index=False)
+		df.to_csv(path_or_buf='reddit_api_features.csv', sep=',', header=True, index=True)
 	else:
 		return df
 
@@ -67,3 +66,5 @@ def get_bitcoin_data_test():
 		data = np.vstack((data, [dateStamp, polarity, subjectivity]))
 	df = pd.DataFrame(data[1:, :], columns=['Date', 'Polarity', 'Subjectivity'])	
 	return df.set_index('Date')
+
+process_data(None, True)
