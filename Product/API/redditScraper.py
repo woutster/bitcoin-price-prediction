@@ -36,13 +36,23 @@ def get_bitcoin_data(limit):
 	return data
 
 def process_data(save):
-	processed_data = ['Date', 'NumberOfPosts', 'AveragePolarity', 'AverageSubjectivity']
+	processed_data = ['Date', 'NumberOfPosts', 'numberPositive',
+					'numberNegative', 'TotalPos', 'TotalNeg',
+					'AveragePolarity', 'AverageSubjectivity']
 	data = get_bitcoin_data_2()
 	for index, _ in data.iterrows():
 		polarity = np.array(data.get_value(index, 'Polarity')).astype(np.float)
 		subjectivity = np.array(data.get_value(index, 'Subjectivity')).astype(np.float)
+		amount_pos = np.where(polarity > 0)[0].size
+		amount_neg = np.where(polarity < 0)[0].size
+		totalPos = polarity[np.where(polarity>0)].sum()
+		totalNeg = polarity[np.where(polarity<0)].sum()
 		processed_data = np.vstack((processed_data, [index, 
-													polarity.size, 
+													polarity.size,
+													amount_pos,
+													amount_neg,
+													totalPos,
+													totalNeg,
 													np.average(polarity), 
 													np.average(subjectivity)]))
 	df = pd.DataFrame(data=processed_data[1:,1:],
