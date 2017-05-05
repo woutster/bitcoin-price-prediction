@@ -3,6 +3,7 @@
 import praw
 import numpy as np
 import datetime
+import pandas as pd
 from textblob import TextBlob
 
 reddit = praw.Reddit(client_id='oUo5NKou35H3iw',
@@ -24,11 +25,24 @@ def get_sentiment(string):
 	return polarity, subjectivity
 
 def get_bitcoin_data():
-	data = np.array(['Title', 'Date', 'Polarity', 'Subjectivity'])
-
-	for submission in reddit.subreddit('bitcoin').hot(limit=10):
+	columns = ['Date', 'Polarity', 'Subjectivity']
+	data = np.array(columns)
+	for submission in reddit.subreddit('bitcoin').hot(limit=50):
 		dateStamp = UNIX_to_date(submission.created_utc)
 		polarity, subjectivity = get_sentiment(submission.title)
-		data = np.vstack((data, [submission.title, dateStamp, polarity, subjectivity]))
+		data = np.vstack((data, [dateStamp, polarity, subjectivity]))
+	df = pd.DataFrame(data[1:, :], columns=['Date', 'Polarity', 'Subjectivity'])
+	data = df.set_index('Date')
+	return data
 
-get_bitcoin_data()
+def process_data():
+	data = get_bitcoin_data()
+	for index, _ in data.iterrows():
+		import pdb; pdb.set_trace()
+		polarity = np.array(data.get_value(index, 'Polarity')).astype(np.float)
+		subjectivity = np.array(data.get_value(index, 'Subjectivity')).astype(np.float)
+		
+	
+
+
+process_data()
