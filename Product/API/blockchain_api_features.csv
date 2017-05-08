@@ -1,4 +1,4 @@
-timestamp,marketPriceBTCInUSD,tradeVolume,medianConfirmationTime,blocksSize,costPerTransactionPercent,difficulty,hashRate,numberOfTransactionsPerBlock,totalTransactions,totalAdressesTransactions,numberOfcirculatingBitcoins,marketCapitalization
+,marketPriceBTCInUSD,tradeVolume,medianConfirmationTime,blocksSize,costPerTransactionPercent,difficulty,hashRate,numberOfTransactionsPerBlock,totalTransactions,totalAdressesTransactions,numberOfcirculatingBitcoins,marketCapitalization
 2016-01-01,432.33,20406959.2119,7.78333333333,53710.0,2.61508751253,1467328.02,697129.166406,1304.0,101247924.0,232199.0,15031975.0,6498773751.75
 2016-02-01,433.94,15069490.9225,10.0333333333,53789.0,3.26496108967,1498828.76,707457.005908,1235.0,101390828.0,334703.0,15035400.0,6524461476.0
 2016-03-01,428.13,23322149.802,7.13333333333,53867.0,3.09621802909,1604631.24,769424.042922,1085.0,101531892.0,295177.0,15039125.0,6438700586.25

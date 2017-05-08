@@ -107,8 +107,10 @@ def process_data(save):
 			totalAdressesTransactions.get_value(index, 'y'), 
 			numberOfcirculatingBitcoins.get_value(index, 'y'), 
 			marketCapitalization.get_value(index, 'y')]))
-	df = pd.DataFrame(data)
+	df = pd.DataFrame(data=data[1:,1:],
+							index=data[1:,0],
+							columns=data[0,1:])
 	if save:
-		df.to_csv(path_or_buf='blockchain_api_features.csv', sep=',', header=False, index=False)
+		df.to_csv(path_or_buf='blockchain_api_features.csv', sep=',', header=True, index=True)
 	else:
 		return df
