@@ -69,7 +69,7 @@ def get_bitcoin_data():
 	data = np.array(columns)
 	subreddit = reddit.subreddit('bitcoin')
 	start_date = 1451606400 # 1 january 2016
-	end_date = 1483228800 # 31 december 2016
+	end_date = 1483142400 # 31 december 2016
 	for submission in subreddit.submissions(start_date, end_date):
 		dateStamp = UNIX_to_date(submission.created_utc)
 		polarity, subjectivity = get_sentiment(submission.title)
