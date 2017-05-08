@@ -24,22 +24,22 @@ def get_sentiment(string):
 		subjectivity += sentence.sentiment.subjectivity
 	return polarity, subjectivity
 
-def get_bitcoin_data(limit):
-	columns = ['Date', 'Polarity', 'Subjectivity']
-	data = np.array(columns)
-	for submission in reddit.subreddit('bitcoin').top(time_filter='year', limit=limit):
-		dateStamp = UNIX_to_date(submission.created_utc)
-		polarity, subjectivity = get_sentiment(submission.title)
-		data = np.vstack((data, [dateStamp, polarity, subjectivity]))
-	df = pd.DataFrame(data[1:, :], columns=['Date', 'Polarity', 'Subjectivity'])
-	data = df.set_index('Date')
-	return data
+# def get_bitcoin_data(limit):
+# 	columns = ['Date', 'Polarity', 'Subjectivity']
+# 	data = np.array(columns)
+# 	for submission in reddit.subreddit('bitcoin').top(time_filter='year', limit=limit):
+# 		dateStamp = UNIX_to_date(submission.created_utc)
+# 		polarity, subjectivity = get_sentiment(submission.title)
+# 		data = np.vstack((data, [dateStamp, polarity, subjectivity]))
+# 	df = pd.DataFrame(data[1:, :], columns=['Date', 'Polarity', 'Subjectivity'])
+# 	data = df.set_index('Date')
+# 	return data
 
 def process_data(save):
 	processed_data = ['Date', 'NumberOfPosts', 'numberPositive',
 					'numberNegative', 'TotalPos', 'TotalNeg',
 					'AveragePolarity', 'AverageSubjectivity']
-	data = get_bitcoin_data_2()
+	data = get_bitcoin_data()
 	for index, _ in data.iterrows():
 		polarity = np.array(data.get_value(index, 'Polarity')).astype(np.float)
 		subjectivity = np.array(data.get_value(index, 'Subjectivity')).astype(np.float)
@@ -64,7 +64,7 @@ def process_data(save):
 	else:
 		return df
 
-def get_bitcoin_data_2():
+def get_bitcoin_data():
 	columns = ['Date', 'Polarity', 'Subjectivity']
 	data = np.array(columns)
 	subreddit = reddit.subreddit('bitcoin')
