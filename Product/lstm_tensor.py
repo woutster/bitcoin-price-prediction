@@ -11,22 +11,22 @@ from bluevelvet.utils.utils import *
 ################################################################################
 ################################################################################
 
-seq_length = 150
-data_dim   = 2
-min_count  = 2
-max_count  = 10
-noise      = 0.01
+seq_length = 366 # timestep
+data_dim   = 2 # features 
+# min_count  = 2 # min label
+# max_count  = 10 # max label
+noise      = 0.01 # noise
 
 learning_rate_base  = 0.01
 learning_rate_step  = 5000
 learning_rate_decay = 0.05
 batch_size  = 256
 train_steps = 1e5
-lstm_units  = 512
+lstm_units  = 16
 max_norm_gradient = 2
 forget_gate_bias = 1
 weight_decay_coeff = 0.0005
-num_classes = max_count-min_count
+num_classes = 3
 
 ################################################################################
 ################################################################################
@@ -65,7 +65,7 @@ for step in range(seq_length):
 
 # Compute the predictions
 with tf.variable_scope("softmax"):
-    output = tf.reshape(tf.concat(1, output), [-1, lstm_units])
+    output = tf.reshape(tf.concat(output, 1), [-1, lstm_units])
     logits = tf.matmul(output, softmax_W) + softmax_b
     proba  = tf.nn.softmax(logits, name="probabilities")
     predictions = tf.argmax(proba, dimension=1)
@@ -73,7 +73,7 @@ with tf.variable_scope("softmax"):
 # Compute the loss
 with tf.variable_scope("loss"):
     labels_one_hot =tf.one_hot(tf.to_int32(pl_labels), num_classes)
-    classification_loss = tf.nn.softmax_cross_entropy_with_logits(logits, labels_one_hot)
+    classification_loss = tf.nn.softmax_cross_entropy_with_logits(labels=labels_one_hot, logits=logits)
     classification_loss = tf.reduce_mean(classification_loss, name="loss")
     accuracy = tf.contrib.metrics.accuracy(predictions, tf.to_int64(pl_labels))
 
@@ -108,12 +108,12 @@ if max_norm_gradient > 0:
 train_op = optimizer.apply_gradients(grads_and_vars, global_step=global_step)
 
 # Summaries
-tf.scalar_summary("train/learning_rate", learning_rate)
-tf.scalar_summary("train/classification_loss", classification_loss)
-tf.scalar_summary("train/classification_loss_frac", classification_loss_frac)
-tf.scalar_summary("train/weight_decay_loss", classification_loss)
-tf.scalar_summary("train/loss", loss)
-tf.scalar_summary("train/accuracy", accuracy)
+tf.summary.histogram("train/learning_rate", learning_rate)
+tf.summary.scalar("train/classification_loss", classification_loss)
+tf.summary.scalar("train/classification_loss_frac", classification_loss_frac)
+tf.summary.scalar("train/weight_decay_loss", classification_loss)
+tf.summary.scalar("train/loss", loss)
+tf.summary.scalar("train/accuracy", accuracy)
 
 # Retain the summaries from the final tower.
 summaries = tf.get_collection(tf.GraphKeys.SUMMARIES)
@@ -142,6 +142,8 @@ summary_op = tf.merge_summary(summaries)
 for step in range(int(train_steps)):
 
     # Generate a new batch ==> Replace with your own code...
+
+    # TODO
     X, y = generate_batch(batch_size, seq_length, data_dim, min_count, max_count, noise)
 
     feed_dict = {

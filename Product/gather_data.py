@@ -9,8 +9,8 @@ def get_data(use_existing_data):
 		'numberOfTransactionsPerBlock', 'totalTransactions',
 		'totalAdressesTransactions', 'numberOfcirculatingBitcoins', 
 		'marketCapitalization', 'date_3', 'NumberOfPosts', 'numberPositive',
-		'numberNegative', 'TotalPos', 'TotalNeg', 'AveragePolarity', 
-		'AverageSubjectivity']
+		'numberNegative', 'AverageScore', 'averageNoComments', 'TotalPos',
+		'TotalNeg', 'AveragePolarity', 'AverageSubjectivity']
 		reddit_data = pd.read_csv(filepath_or_buffer=r'API/reddit_api_features.csv', sep=',', index_col=0).reset_index().values
 		google_data = pd.read_csv(filepath_or_buffer=r'API/google_api_features.csv', sep=',', index_col=0).reset_index().values
 		blockchain_data = pd.read_csv(filepath_or_buffer=r'API/blockchain_api_features.csv', sep=',', index_col=0).reset_index().values
@@ -23,9 +23,10 @@ def get_data(use_existing_data):
 		return X, y
 	# TODO
 	else :
-		import redditScraper
-		import blockchain
-		import google_api
-		reddit_data = redditScraper.process_data(False).sort()
-		google_data = google_api.process_data(False).sort()
-		blockchain_data = blockchain.process_data(False).sort()
+		print('Error, this is not yet implemented')
+		# import redditScraper
+		# import blockchain
+		# import google_api
+		# reddit_data = redditScraper.process_data(False).sort()
+		# google_data = google_api.process_data(False).sort()
+		# blockchain_data = blockchain.process_data(False).sort()

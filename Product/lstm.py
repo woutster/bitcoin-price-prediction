@@ -71,7 +71,7 @@ def load_csvdata(rawdata, time_steps, seperate=False):
     data = rawdata
     if not isinstance(data, pd.DataFrame):
         data = pd.DataFrame(data)
-
+    
     train_x, val_x, test_x = prepare_data(data['a'] if seperate else data, time_steps)
     train_y, val_y, test_y = prepare_data(data['b'] if seperate else data, time_steps, labels=True)
     return dict(train=train_x, val=val_x, test=test_x), dict(train=train_y, val=val_y, test=test_y)

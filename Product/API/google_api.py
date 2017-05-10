@@ -24,4 +24,4 @@ def process_data(save):
 	if save:
 		data.to_csv(path_or_buf='google_api_features.csv', sep=',', header=True, index=False)
 	else:
-		return data
+		return

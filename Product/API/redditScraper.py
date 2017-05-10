@@ -37,11 +37,14 @@ def get_sentiment(string):
 
 def process_data(save):
 	processed_data = ['Date', 'NumberOfPosts', 'numberPositive',
-					'numberNegative', 'TotalPos', 'TotalNeg',
-					'AveragePolarity', 'AverageSubjectivity']
+					'numberNegative', 'AverageScore', 'averageNoComments',
+					'TotalPos', 'TotalNeg', 'AveragePolarity', 
+					'AverageSubjectivity']
 	data = get_bitcoin_data()
 	for index, _ in data.iterrows():
 		polarity = np.array(data.get_value(index, 'Polarity')).astype(np.float)
+		score = np.array(data.get_value(index, 'Score')).astype(np.float)
+		num_comments = np.array(data.get_value(index, 'noOfComments')).astype(np.float)
 		subjectivity = np.array(data.get_value(index, 'Subjectivity')).astype(np.float)
 		amount_pos = np.where(polarity > 0)[0].size
 		amount_neg = np.where(polarity < 0)[0].size
@@ -51,6 +54,8 @@ def process_data(save):
 													polarity.size,
 													amount_pos,
 													amount_neg,
+													np.average(score),
+													np.average(num_comments),
 													totalPos,
 													totalNeg,
 													np.average(polarity), 
@@ -65,14 +70,15 @@ def process_data(save):
 		return df
 
 def get_bitcoin_data():
-	columns = ['Date', 'Polarity', 'Subjectivity']
+	columns = ['Date', 'Polarity', 'Subjectivity', 'Score', 'noOfComments']
 	data = np.array(columns)
 	subreddit = reddit.subreddit('bitcoin')
 	start_date = 1451606400 # 1 january 2016
+	end_date_test = 1452211200 # 8 january 2016
 	end_date = 1483142400 # 31 december 2016
 	for submission in subreddit.submissions(start_date, end_date):
 		dateStamp = UNIX_to_date(submission.created_utc)
 		polarity, subjectivity = get_sentiment(submission.title)
-		data = np.vstack((data, [dateStamp, polarity, subjectivity]))
-	df = pd.DataFrame(data[1:, :], columns=['Date', 'Polarity', 'Subjectivity'])	
+		data = np.vstack((data, [dateStamp, polarity, subjectivity, submission.score, submission.num_comments]))
+	df = pd.DataFrame(data[1:, :], columns=columns)	
 	return df.set_index('Date')
