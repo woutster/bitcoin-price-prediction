@@ -4,8 +4,8 @@ import sys,getopt,got,datetime,codecs
 from datetime import timedelta, date
 
 def daterange(start_date, end_date):
-    for n in range(int ((end_date - start_date).days)):
-        yield start_date + timedelta(n)
+	for n in range(int ((end_date - start_date).days)):
+		yield start_date + timedelta(n)
 
 
 def export(query, since, until, output_file):
@@ -43,11 +43,12 @@ def export(query, since, until, output_file):
 
 if __name__ == '__main__':
 
-	start_date = date(2016, 1, 76)
-	end_date = date(2016, 12, 31)
+	start_date = date(2016, 3, 31)
+	end_date = date(2016, 4, 14)
 	for single_date in daterange(start_date, end_date):
 		since = single_date.strftime("%Y-%m-%d")
 		until = (single_date + timedelta(days=1)).strftime("%Y-%m-%d")
 		query = 'bitcoin'
 		print('Batch: ' + since)
-		export(query, 	since, until, since)
+		# import pdb; pdb.set_trace()
+		export(query, since, until, since)
