@@ -4,15 +4,14 @@ from datetime import datetime
 import numpy as np
 import tensorflow as tf
 
-from data.data_generator import *
-from bluevelvet.utils.utils import *
+import gather_data
 
 ################################################################################
 ################################################################################
 ################################################################################
 
 seq_length = 366 # timestep
-data_dim   = 2 # features 
+data_dim   = 21 # features 
 # min_count  = 2 # min label
 # max_count  = 10 # max label
 noise      = 0.01 # noise
@@ -20,7 +19,7 @@ noise      = 0.01 # noise
 learning_rate_base  = 0.01
 learning_rate_step  = 5000
 learning_rate_decay = 0.05
-batch_size  = 256
+batch_size  = 36
 train_steps = 1e5
 lstm_units  = 16
 max_norm_gradient = 2
@@ -49,7 +48,7 @@ learning_rate = tf.train.exponential_decay(
 
 # Initialize LSTM
 with tf.variable_scope("lstm"):
-    lstm = tf.nn.rnn_cell.LSTMCell(num_units=lstm_units, forget_bias=forget_gate_bias)
+    lstm = tf.contrib.rnn.BasicLSTMCell(num_units=lstm_units, forget_bias=forget_gate_bias)
     initial_state = state = lstm.zero_state(batch_size, tf.float32)
 
 # Final softmax layer for predictions
@@ -94,10 +93,10 @@ grads, variables = zip(*grads_and_vars)
 
 for g, v in grads_and_vars:
     if g is not None:
-        tf.histogram_summary("gradients/{}/hist".format(v.name), g)
-        tf.scalar_summary("gradients/{}/max".format(v.name), tf.reduce_max(g))
-        tf.scalar_summary("gradients/{}/mean".format(v.name), tf.reduce_mean(g))
-        tf.scalar_summary("gradients/{}/sparsity".format(v.name), tf.nn.zero_fraction(g))
+        tf.summary.histogram("gradients/{}/hist".format(v.name), g)
+        tf.summary.scalar("gradients/{}/max".format(v.name), tf.reduce_max(g))
+        tf.summary.scalar("gradients/{}/mean".format(v.name), tf.reduce_mean(g))
+        tf.summary.scalar("gradients/{}/sparsity".format(v.name), tf.nn.zero_fraction(g))
 
 # Optionally perform gradient clipping
 if max_norm_gradient > 0:
@@ -129,22 +128,24 @@ sess = tf.Session(config=tf.ConfigProto(
 ))
 
 # Initialize the session
-init = tf.initialize_all_variables()
+init = tf.global_variables_initializer()
 sess.run(init)
 
 # Initialize summary writers
 summary_path = os.path.join("./output/%s_seq_length_%i" % (datetime.now().strftime("%Y%m%d_%H%M"), seq_length))
-mkdirs(summary_path)
+os.makedirs(summary_path)
 
-summary_writer = tf.train.SummaryWriter(summary_path, sess.graph)
-summary_op = tf.merge_summary(summaries)
+summary_writer = tf.summary.FileWriter(summary_path, sess.graph)
+summary_op = tf.summary.merge(summaries)
 
 for step in range(int(train_steps)):
 
     # Generate a new batch ==> Replace with your own code...
 
     # TODO
-    X, y = generate_batch(batch_size, seq_length, data_dim, min_count, max_count, noise)
+    # import pdb; pdb.set_trace()
+    X, y = gather_data.get_data(True)
+    import pdb; pdb.set_trace()
 
     feed_dict = {
         pl_feat: X,
