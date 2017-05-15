@@ -55,7 +55,6 @@ def get_data(sequential):
 	else:
 		_, _, not_found_list = test_twitter_data.test_data(False)
 		half = not_found_list.size
-		import pdb; pdb.set_trace()
 		for single_date in not_found_list[1:half]:
 			single_date = single_date[0]
 			since = single_date.strftime("%Y-%m-%d")
