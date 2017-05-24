@@ -41,7 +41,6 @@ def test_data(printing):
 				print('Not found!')
 				print(single_date.strftime("%Y-%m-%d") + '_output.csv')
 				print()
-
 	return good_list, error_list, not_found_list
 
 def test_single_data(error_list):
@@ -49,4 +48,3 @@ def test_single_data(error_list):
 		print(file[0])
 		my_file = 'good_data/' + file[0]
 		data = pd.read_csv(my_file, sep=';', encoding='utf-8')
-

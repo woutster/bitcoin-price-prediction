@@ -1,8 +1,12 @@
+# Fully connected layer/dense layer -> dropout
+
+
 import os
 from datetime import datetime
 
 import numpy as np
 import tensorflow as tf
+import random
 
 import gather_data
 
@@ -10,20 +14,21 @@ import gather_data
 ################################################################################
 ################################################################################
 
-seq_length = 366 # timestep
-data_dim   = 21 # features 
-# min_count  = 2 # min label
-# max_count  = 10 # max label
-noise      = 0.01 # noise
+seq_length = 15 # timestep
+data_dim   = 1 # features 
+label_threshold = 0.005 # increase in label
 
 learning_rate_base  = 0.01
-learning_rate_step  = 5000
+learning_rate_step  = 500
 learning_rate_decay = 0.05
-batch_size  = 36
-train_steps = 1e5
-lstm_units  = 16
-max_norm_gradient = 2
-forget_gate_bias = 1
+
+train_steps = 10000 # Training steps
+
+lstm_units  = 64
+batch_size  = 16
+
+max_norm_gradient = 0
+forget_gate_bias = 1 # Default
 weight_decay_coeff = 0.0005
 num_classes = 3
 
@@ -31,13 +36,35 @@ num_classes = 3
 ################################################################################
 ################################################################################
 
-# Placeholders
+def generate_batch(batch_size, seq_length, data_dim, label_threshold):
+    X_data, y_data = gather_data.get_data(True, label_threshold)
+    x_size = X_data.shape[0]
+
+    X_data = X_data[:, 1:(1+data_dim)]
+
+    
+
+    # X = X_data[rand_index:rand_index+seq_length]
+    # y = y_data[rand_index:rand_index+seq_length]
+
+    X, y = np.zeros(shape=(batch_size, seq_length, data_dim)), np.zeros(shape=(batch_size))
+    for i in range(batch_size):
+        rand_index = random.randint(0,x_size-(seq_length+1))
+        X_i = X_data[rand_index:rand_index + seq_length, :]
+        # TODO: Is this correct? is it only the last label?
+        y_i = y_data[rand_index + seq_length]
+        X[i] = X_i
+        y[i] = y_i
+    return X, y
+
+# Placeholders, insert placeholders for features and labels
 pl_feat   = tf.placeholder(tf.float32, [None, seq_length, data_dim], name="features")
 pl_labels = tf.placeholder(tf.int32, [None], name="labels")
 
 # Training step
 global_step = tf.get_variable("global_step", [], initializer=tf.constant_initializer(0), trainable=False)
 
+# Create exponential decay learning rate as this works beter
 learning_rate = tf.train.exponential_decay(
     learning_rate_base,
     global_step,
@@ -54,7 +81,7 @@ with tf.variable_scope("lstm"):
 # Final softmax layer for predictions
 with tf.variable_scope("softmax"):
     softmax_W = tf.get_variable("W", [lstm_units, num_classes], initializer=tf.contrib.layers.variance_scaling_initializer())
-    softmax_b = tf.get_variable("b", [num_classes], initializer=tf.zeros_initializer)
+    softmax_b = tf.get_variable("b", [num_classes], initializer=tf.zeros_initializer())
 
 # Unrolling the LSTM
 for step in range(seq_length):
@@ -76,12 +103,12 @@ with tf.variable_scope("loss"):
     classification_loss = tf.reduce_mean(classification_loss, name="loss")
     accuracy = tf.contrib.metrics.accuracy(predictions, tf.to_int64(pl_labels))
 
-    # Weight decay
-    l2_loss = tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables() if not('/b:' in v.name)])
-    l2_loss *= weight_decay_coeff
+    # # Weight decay
+    # l2_loss = tf.add_n([tf.nn.l2_loss(v) for v in tf.trainable_variables() if not('/b:' in v.name)])
+    # l2_loss *= weight_decay_coeff
 
     # Total loss
-    loss = classification_loss + l2_loss
+    loss = classification_loss # + l2_loss
     classification_loss_frac = tf.div(classification_loss, loss)
 
 # RMSProp optimizer
@@ -133,7 +160,9 @@ sess.run(init)
 
 # Initialize summary writers
 summary_path = os.path.join("./output/%s_seq_length_%i" % (datetime.now().strftime("%Y%m%d_%H%M"), seq_length))
-os.makedirs(summary_path)
+if not (os.path.isdir(summary_path)):
+    os.makedirs(summary_path)
+
 
 summary_writer = tf.summary.FileWriter(summary_path, sess.graph)
 summary_op = tf.summary.merge(summaries)
@@ -142,10 +171,8 @@ for step in range(int(train_steps)):
 
     # Generate a new batch ==> Replace with your own code...
 
-    # TODO
-    # import pdb; pdb.set_trace()
-    X, y = gather_data.get_data(True)
-    import pdb; pdb.set_trace()
+    X, y = generate_batch(batch_size, seq_length, data_dim, label_threshold)
+
 
     feed_dict = {
         pl_feat: X,
@@ -171,5 +198,7 @@ for step in range(int(train_steps)):
                np_learn_rate, np_class_loss_frac, np_accuracy, np_loss))
 
     if step % 100 == 0:
+        print('~~~~')
         print(y[0:20])
         print(np_predictions[0:20])
+        print('~~~~')

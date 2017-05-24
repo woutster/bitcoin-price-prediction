@@ -1,135 +1,121 @@
+import time
+import warnings
 import numpy as np
-import pandas as pd
-import sys
-# import tensorflow as tf
+from numpy import newaxis
+from keras.layers.core import Dense, Activation, Dropout
+from keras.layers.recurrent import LSTM
+from keras.models import Sequential
+import matplotlib.pyplot as plt
 
-# from tensorflow.python.framework import dtypes
-# from tensorflow.contrib import learn as tflearn
-# from tensorflow.contrib import layers as tflayers
+warnings.filterwarnings("ignore") # Ignore warnings
 
-import gather_data
+# Gets a matrix as input and divides it into training and test sets
+def load_data(matrix, seq_len, pred_len, pred_delay, normalise_window, ratio):
+    sequence_length = seq_len + pred_len + pred_delay # The length of the slice that is taken from the data
 
-X, y = gather_data.get_data(True)
-import pdb; pdb.set_trace()
+    result = [] # List that is going to contain the sequences
+    for index in range(len(matrix) - sequence_length): # Take every possible sequence from beginning to end
+        result.append(matrix[index: index + sequence_length]) # Append sequence to result list
 
+    result = np.array(result) # Convert result to numpy array
 
-def x_sin(x):
-    return x * np.sin(x)
+    row = round(ratio * result.shape[0]) # Up until this row the data is training data
 
+    train = result[:int(row), :] # Get training data
+    np.random.shuffle(train) # Random shuffle trainingdata
+    x_train = train[:, :seq_len] # The sequence of the training data
+    y_train = train[:, -pred_len] # The to be predicted values of the training data
+    x_test = result[int(row):, :seq_len] # The sequence of the test data
+    y_test = result[int(row):, -pred_len] # The to be predicted values of the test data
 
-def sin_cos(x):
-    return pd.DataFrame(dict(a=np.sin(x), b=np.cos(x)), index=x)
+    if normalise_window: # Normalise
+        mu = np.mean(matrix) # Mean
+        sigma = np.std(matrix) # Deviation
 
+        # y_train = (y_train - mu) / sigma
+        # y_test = (y_test - mu) / sigma
 
-def rnn_data(data, time_steps, labels=False):
-    """
-    creates new data frame based on previous observation
-      * example:
-        l = [1, 2, 3, 4, 5]
-        time_steps = 2
-        -> labels == False [[1, 2], [2, 3], [3, 4]]
-        -> labels == True [3, 4, 5]
-    """
-    rnn_df = []
-    for i in range(len(data) - time_steps):
-        if labels:
-            try:
-                rnn_df.append(data.iloc[i + time_steps].as_matrix())
-            except AttributeError:
-                rnn_df.append(data.iloc[i + time_steps])
-        else:
-            data_ = data.iloc[i: i + time_steps].as_matrix()
-            rnn_df.append(data_ if len(data_.shape) > 1 else [[i] for i in data_])
+        x_train = (x_train - mu) / sigma
+        x_test = (x_test - mu) / sigma
 
-    return np.array(rnn_df, dtype=np.float32)
+    x_train = np.reshape(x_train, (x_train.shape[0], x_train.shape[1], 1)) # Reshape, because expected lstm_1_input to have 3 dimensions
+    x_test = np.reshape(x_test, (x_test.shape[0], x_test.shape[1], 1)) # Reshape, because expected lstm_1_input to have 3 dimensions
+
+    return [x_train, y_train, x_test, y_test]
 
 
-def split_data(data, val_size=0.1, test_size=0.1):
-    """
-    splits data to training, validation and testing parts
-    """
-    ntest = int(round(len(data) * (1 - test_size)))
-    nval = int(round(len(data.iloc[:ntest]) * (1 - val_size)))
+def predict_sequences_multiple(model, data, window_size, prediction_len):
+    # Predict sequence of window_size steps before shifting prediction run forward by prediction_len steps
 
-    df_train, df_val, df_test = data.iloc[:nval], data.iloc[nval:ntest], data.iloc[ntest:]
+    prediction_seqs = []
+    for i in range(int(len(data) / prediction_len)): # -1
+        curr_frame = data[i * prediction_len]
+        predicted = []
+        for j in range(prediction_len):
+            predicted.append(model.predict(curr_frame[newaxis, :, :])[0, 0])
+            curr_frame = curr_frame[1:]
+            curr_frame = np.insert(curr_frame, [window_size - 1], predicted[-1], axis=0)
+        prediction_seqs.append(predicted)
 
-    return df_train, df_val, df_test
-
-
-def prepare_data(data, time_steps, labels=False, val_size=0.1, test_size=0.1):
-    """
-    Given the number of `time_steps` and some data,
-    prepares training, validation and test data for an lstm cell.
-    """
-    df_train, df_val, df_test = split_data(data, val_size, test_size)
-    return (rnn_data(df_train, time_steps, labels=labels),
-            rnn_data(df_val, time_steps, labels=labels),
-            rnn_data(df_test, time_steps, labels=labels))
+    return prediction_seqs
 
 
-def load_csvdata(rawdata, time_steps, seperate=False):
-    data = rawdata
-    if not isinstance(data, pd.DataFrame):
-        data = pd.DataFrame(data)
-    
-    train_x, val_x, test_x = prepare_data(data['a'] if seperate else data, time_steps)
-    train_y, val_y, test_y = prepare_data(data['b'] if seperate else data, time_steps, labels=True)
-    return dict(train=train_x, val=val_x, test=test_x), dict(train=train_y, val=val_y, test=test_y)
+# Plots the results
+def plot_results_multiple(predicted_data, true_data, prediction_len, prediction_delay):
+    true_data = true_data.reshape(len(true_data),1) # reshape true data from batches to one long sequence
+
+    fig = plt.figure(facecolor='white')
+    ax = fig.add_subplot(111)
+    ax.plot(true_data, label='True Data')
+
+    if prediction_len == 1:
+        plt.plot(predicted_data, label='Prediction')
+        plt.legend()
+    else:
+        # Pad the list of predictions to shift it in the graph to it's correct start
+        for i, data in enumerate(predicted_data):
+            padding = [None for p in range(i * prediction_len)]
+            plt.plot(padding + data, label='Prediction')
+            plt.legend()
+
+    plt.show()
+
+def plot_loss(model_fit):
+    # summarize history for accuracy
+    plt.plot(model_fit.history['loss'])
+    plt.plot(model_fit.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'validation'], loc='upper left')
+    plt.show()
+
+# Compute mean error
+def error(predicted, real, prediction_delay):
+    errors = []
+    predicted = np.array(predicted)
+    predicted = predicted.reshape(np.size(predicted), 1)
+    for p, r in zip(predicted, real):
+        errors.append(np.abs(p-r))
+    mean_error = np.array(errors).mean()
+    return mean_error
 
 
-def generate_data(fct, x, time_steps, seperate=False):
-    """generates data with based on a function fct"""
-    data = fct(x)
-    if not isinstance(data, pd.DataFrame):
-        data = pd.DataFrame(data)
-    train_x, val_x, test_x = prepare_data(data['a'] if seperate else data, time_steps)
-    train_y, val_y, test_y = prepare_data(data['b'] if seperate else data, time_steps, labels=True)
-    return dict(train=train_x, val=val_x, test=test_x), dict(train=train_y, val=val_y, test=test_y)
 
 
-def lstm_model(num_units, rnn_layers, dense_layers=None, learning_rate=0.1, optimizer='Adagrad'):
-    """
-    Creates a deep model based on:
-        * stacked lstm cells
-        * an optional dense layers
-    :param num_units: the size of the cells.
-    :param rnn_layers: list of int or dict
-                         * list of int: the steps used to instantiate the `BasicLSTMCell` cell
-                         * list of dict: [{steps: int, keep_prob: int}, ...]
-    :param dense_layers: list of nodes for each layer
-    :return: the model definition
-    """
+def predict_point_by_point(model, data):
+    # Predict each timestep given the last sequence of true data, in effect only predicting 1 step ahead each time
+    predicted = model.predict(data)
+    predicted = np.reshape(predicted, (predicted.size,))
+    return predicted
 
-    def lstm_cells(layers):
-        if isinstance(layers[0], dict):
-            return [tf.nn.rnn_cell.DropoutWrapper(tf.nn.rnn_cell.BasicLSTMCell(layer['num_units'],
-                                                                               state_is_tuple=True),
-                                                  layer['keep_prob'])
-                    if layer.get('keep_prob') else tf.nn.rnn_cell.BasicLSTMCell(layer['num_units'],
-                                                                                state_is_tuple=True)
-                    for layer in layers]
-        return [tf.nn.rnn_cell.BasicLSTMCell(steps, state_is_tuple=True) for steps in layers]
 
-    def dnn_layers(input_layers, layers):
-        if layers and isinstance(layers, dict):
-            return tflayers.stack(input_layers, tflayers.fully_connected,
-                                  layers['layers'],
-                                  activation=layers.get('activation'),
-                                  dropout=layers.get('dropout'))
-        elif layers:
-            return tflayers.stack(input_layers, tflayers.fully_connected, layers)
-        else:
-            return input_layers
-
-    def _lstm_model(X, y):
-        stacked_lstm = tf.nn.rnn_cell.MultiRNNCell(lstm_cells(rnn_layers), state_is_tuple=True)
-        x_ = tf.unpack(X, axis=1, num=num_units)
-        output, layers = tf.nn.rnn(stacked_lstm, x_, dtype=dtypes.float32)
-        output = dnn_layers(output[-1], dense_layers)
-        prediction, loss = tflearn.models.linear_regression(output, y)
-        train_op = tf.contrib.layers.optimize_loss(
-            loss, tf.contrib.framework.get_global_step(), optimizer=optimizer,
-            learning_rate=learning_rate)
-        return prediction, loss, train_op
-
-    return _lstm_model
+def predict_sequence_full(model, data, window_size):
+    # Shift the window by 1 new prediction each time, re-run predictions on new window
+    curr_frame = data[0]
+    predicted = []
+    for i in range(len(data)):
+        predicted.append(model.predict(curr_frame[newaxis, :, :])[0, 0])
+        curr_frame = curr_frame[1:]
+        curr_frame = np.insert(curr_frame, [window_size - 1], predicted[-1], axis=0)
+    return predicted

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import sys,getopt,got,datetime,codecs
+import sys,getopt,got3,datetime,codecs
 from datetime import timedelta, date
 import test_twitter_data
 
@@ -17,7 +17,7 @@ def export(query, since, until, output_file):
 	outputFile = codecs.open(output_file, "w+", "utf-8")
  
 	try:
-		tweetCriteria = got.manager.TweetCriteria().setQuerySearch(query).setSince(since).setUntil(until)
+		tweetCriteria = got3.manager.TweetCriteria().setQuerySearch(query).setSince(since).setUntil(until)
 
 		outputFile.write('username;date;retweets;favorites;text;geo;mentions;hashtags;id;permalink')
 		
@@ -34,7 +34,7 @@ def export(query, since, until, output_file):
 			outputFile.flush();
 			print('Time = ' + tweets[0].date.strftime("%Y-%m-%d %H:%M"))
 		
-		got.manager.TweetManager.getTweets(tweetCriteria, receiveBuffer)
+		got3.manager.TweetManager.getTweets(tweetCriteria, receiveBuffer)
 		
 	except:
 		print('error, something went wrong')
@@ -53,9 +53,9 @@ def get_data(sequential):
 			print('Batch: ' + since)
 			export(query, since, until, since)
 	else:
-		_, _, not_found_list = test_twitter_data.test_data(False)
-		half = not_found_list.size
-		for single_date in not_found_list[1:half]:
+		x, y, not_found_list = test_twitter_data.test_data(False)
+		import pdb; pdb.set_trace()
+		for single_date in not_found_list[1:]:
 			single_date = single_date[0]
 			since = single_date.strftime("%Y-%m-%d")
 			until = (single_date + timedelta(days=1)).strftime("%Y-%m-%d")

@@ -1,16 +1,33 @@
 import numpy as np
 import pandas as pd
 
-def get_data(use_existing_data):
+
+def get_labels(data, label_threshold):
+	label_list = [0]
+	for i in range(1, len(data)):
+		if data[i] > data[i-1] * (1+label_threshold):
+			label_list.append(2)
+		elif data[i] * (1+label_threshold) < data[i-1]:
+			label_list.append(0)
+		else:
+			label_list.append(1)
+	return np.array(label_list)
+
+def get_data(use_existing_data, label_threshold):
 	if use_existing_data:
 		column_list = ['google_data', 'date_2', 'marketPriceBTCInUSD',
-		'tradeVolume', 'medianConfirmationTime', 'blocksSize',
-		'costPerTransactionPercent', 'difficulty', 'hashRate', 
-		'numberOfTransactionsPerBlock', 'totalTransactions',
-		'totalAdressesTransactions', 'numberOfcirculatingBitcoins', 
-		'marketCapitalization', 'date_3', 'NumberOfPosts', 'numberPositive',
-		'numberNegative', 'AverageScore', 'averageNoComments', 'TotalPos',
-		'TotalNeg', 'AveragePolarity', 'AverageSubjectivity']
+			'tradeVolume', 'medianConfirmationTime', 'blocksSize',
+			'costPerTransactionPercent', 'difficulty', 'hashRate',
+			'numberOfTransactionsPerBlock', 'totalTransactions',
+			'totalAdressesTransactions', 'numberOfcirculatingBitcoins',
+			'marketCapitalization', 'date_3', 'NumberOfPosts_bitcoin',
+			'NumberOfPosts_btc', 'numberPositive_bitcoin', 
+			'numberPositive_btc', 'numberNegative_bitcoin',
+			'numberNegative_btc', 'AverageScore_bitcoin','AverageScore_btc',
+			'averageNoComments_bitcoin', 'averageNoComments_btc',
+			'TotalPos_bitcoin', 'TotalPos_btc',	'TotalNeg_bitcoin',
+			'TotalNeg_btc', 'AveragePolarity_bitcoin', 'AveragePolarity_btc',
+			'AverageSubjectivity_bitcoin', 'AverageSubjectivity_btc']
 		reddit_data = pd.read_csv(filepath_or_buffer=r'API/reddit_api_features.csv', sep=',', index_col=0).reset_index().values
 		google_data = pd.read_csv(filepath_or_buffer=r'API/google_api_features.csv', sep=',', index_col=0).reset_index().values
 		blockchain_data = pd.read_csv(filepath_or_buffer=r'API/blockchain_api_features.csv', sep=',', index_col=0).reset_index().values
@@ -18,8 +35,8 @@ def get_data(use_existing_data):
 		merged = pd.DataFrame(data=merge_list[0:,1:],
 							index=merge_list[0:,0],
 							columns=column_list).drop('date_2', 1).drop('date_3', 1)
-		X = merged.drop('marketPriceBTCInUSD', 1)
-		y = merged['marketPriceBTCInUSD']
+		X = np.array(merged)
+		y = get_labels(merged['marketPriceBTCInUSD'], label_threshold)
 		return X, y
 	# TODO
 	else :
