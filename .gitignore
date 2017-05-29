@@ -1,6 +1,7 @@
 # Own data
 *.csv
 *.pdf
+LSTM/output/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
