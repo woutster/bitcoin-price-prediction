@@ -26,8 +26,8 @@ data_dim = 1
 lstm_size = 128
 batch_size = 32
 no_epochs = 300
-learning_rate = 0.001
-drop_rate = 0.1
+learning_rate = 0.000001
+drop_rate = 0.5
 val_split = 0.2
 
 
@@ -114,4 +114,4 @@ def get_statistics():
     predictions = predict(model, test_X, seq_length)
     print("Error: ", error(np.array(predictions), test_y))
 
-# get_statistics()
+get_statistics()
