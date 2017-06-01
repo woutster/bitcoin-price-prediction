@@ -2,6 +2,8 @@
 *.csv
 *.pdf
 LSTM/output/
+Results/
+./idea/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
