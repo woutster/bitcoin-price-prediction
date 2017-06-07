@@ -1,5 +1,6 @@
 import itertools
 from keras import utils
+import scipy.stats
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import accuracy_score
@@ -76,6 +77,15 @@ def predict(model, data, window_size):
         prediction.append(np.argmax(model.predict(input)[0]))
         probability.append(model.predict(input)[0])
     return prediction, probability
+
+
+def calculate_entropy(probs):
+    # Computes entropy of label distribution.
+    
+    ent = []
+    for prop_dist in probs:
+        ent.append(scipy.stats.entropy(prop_dist))
+    return ent
 
 
 # Compute mean error
@@ -175,8 +185,8 @@ def get_statistics(model, model_fit, X, train_X, test_X, train_y, test_y, seq_le
     make_plot(loss, 'Training epochs', 'Loss', 'Training loss on validation set')
     acc = model_fit.history.get('val_acc')
     make_plot(acc, 'Accuracy', 'Training epochs', 'Training accuracy on validation set')
-    prob = np.max(probabilities_train, axis=1) * 100
-    make_plot(prob, 'Training epochs', 'certainty in percentages', 'Certainty data is labeled correctly')
+    ent = calculate_entropy(probabilities_train)
+    make_plot(ent, 'Training epochs', 'Entropy', 'Entropy over training period')
 
     cnf_matrix = confusion_matrix(np.argmax(test_y, axis=1), predictions)
     class_names = ['Fall', 'Stay', 'Rise']
@@ -184,5 +194,4 @@ def get_statistics(model, model_fit, X, train_X, test_X, train_y, test_y, seq_le
     name = 'Confusion matrix of test data consisting of %d days' %len(predictions)
     plot_confusion_matrix(cnf_matrix, class_names, title=name)
     plt.show()
-
     get_data_plots(X)
