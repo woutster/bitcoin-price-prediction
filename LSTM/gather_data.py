@@ -28,9 +28,9 @@ def get_data(use_existing_data, single_data_array, label_threshold):
 			'TotalNeg_bitcoin', 'AveragePolarity_bitcoin',
 			'AverageSubjectivity_bitcoin']
 
-		blockchain_data = pd.read_csv(filepath_or_buffer=r'../API/blockchain_api_features_2_years.csv', sep=';', index_col=0).reset_index().values
-		google_data = pd.read_csv(filepath_or_buffer=r'../API/google_api_features_2_years.csv', sep=';', index_col=0).reset_index().values
-		reddit_data = pd.read_csv(filepath_or_buffer=r'../API/reddit_api_features_bitcoin_2_years.csv', sep=';', index_col=0).reset_index().values
+		blockchain_data = pd.read_csv(filepath_or_buffer=r'../API/blockchain_api_features_3_years.csv', sep=';', index_col=0).reset_index().values
+		google_data = pd.read_csv(filepath_or_buffer=r'../API/google_api_features_3_years.csv', sep=';', index_col=0).reset_index().values
+		reddit_data = pd.read_csv(filepath_or_buffer=r'../API/reddit_api_features_bitcoin_3_years.csv', sep=';', index_col=0).reset_index().values
 		
 		
 		merge_list = np.column_stack((blockchain_data, google_data, np.flipud(reddit_data)))

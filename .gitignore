@@ -1,9 +1,9 @@
 # Own data
-*.csv
 *.pdf
 LSTM/output/
 Results/
 .idea/
+API/Twitter/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

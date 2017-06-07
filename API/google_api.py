@@ -10,19 +10,28 @@ def get_google_data():
 	pytrend2 = TrendReq(google_username, google_password, hl='en-US', tz=360, custom_useragent=None)
 	pytrend3 = TrendReq(google_username, google_password, hl='en-US', tz=360, custom_useragent=None)
 	pytrend4 = TrendReq(google_username, google_password, hl='en-US', tz=360, custom_useragent=None)
+	pytrend5 = TrendReq(google_username, google_password, hl='en-US', tz=360, custom_useragent=None)
+	pytrend6 = TrendReq(google_username, google_password, hl='en-US', tz=360, custom_useragent=None)
 
-	pytrend1.build_payload(kw_list=['Bitcoin'], timeframe='2015-01-01 2015-06-01')
-	pytrend2.build_payload(kw_list=['Bitcoin'], timeframe='2015-06-02 2015-12-31')
-	pytrend3.build_payload(kw_list=['Bitcoin'], timeframe='2016-01-01 2016-06-01')
-	pytrend4.build_payload(kw_list=['Bitcoin'], timeframe='2016-06-02 2016-12-31')
+
+	pytrend1.build_payload(kw_list=['Bitcoin'], timeframe='2014-01-01 2014-06-01')
+	pytrend2.build_payload(kw_list=['Bitcoin'], timeframe='2014-06-02 2014-12-31')
+	pytrend3.build_payload(kw_list=['Bitcoin'], timeframe='2015-01-01 2015-06-01')
+	pytrend4.build_payload(kw_list=['Bitcoin'], timeframe='2015-06-02 2015-12-31')
+	pytrend5.build_payload(kw_list=['Bitcoin'], timeframe='2016-01-01 2016-06-01')
+	pytrend6.build_payload(kw_list=['Bitcoin'], timeframe='2016-06-02 2016-12-31')
 
 	data1 = pytrend1.interest_over_time().reset_index()
 	data2 = pytrend2.interest_over_time().reset_index()
 	data3 = pytrend3.interest_over_time().reset_index()
 	data4 = pytrend4.interest_over_time().reset_index()
+	data5 = pytrend5.interest_over_time().reset_index()
+	data6 = pytrend6.interest_over_time().reset_index()
 	data12 = data1.append(data2, ignore_index=True)
 	data34 = data3.append(data4, ignore_index=True)
-	return data12.append(data34, ignore_index=True)
+	data56 = data5.append(data6, ignore_index=True)
+	data1234 = data12.append(data34, ignore_index=True)
+	return data1234.append(data56, ignore_index=True)
 
 	
 def process_data(save):
@@ -30,7 +39,7 @@ def process_data(save):
 	data.reset_index('date')
 
 	if save:
-		data.to_csv(path_or_buf='google_api_features_2_years.csv', sep=';', header=True, index=False)
+		data.to_csv(path_or_buf='google_api_features_3_years.csv', sep=';', header=True, index=False)
 	else:
 		return
 

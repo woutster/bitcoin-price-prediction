@@ -19,7 +19,15 @@ def UNIX_to_date(timestamp):
 def interpolate(timestamp, array):
 	timestamp_previous = timestamp - (24*60*60)
 	timestamp_next = timestamp + (24*60*60)
-	return (array.get_value(timestamp_previous, 'y') + array.get_value(timestamp_next, 'y'))/2
+	try:
+		next_value = array.get_value(timestamp_next, 'y')
+		prev_value = array.get_value(timestamp_previous, 'y')
+	except:
+		timestamp_previous = timestamp_previous - (24*60*60)
+		timestamp_next = timestamp_next + (24*60*60)
+		next_value = array.get_value(timestamp_next, 'y')
+		prev_value = array.get_value(timestamp_previous, 'y')
+	return (prev_value + next_value)/2
 
 
 def usdToBtc(btc):
@@ -27,51 +35,51 @@ def usdToBtc(btc):
 	return get_response(url)
 
 def getMarketPriceBTCInUSD():
-	url = "https://api.blockchain.info/charts/market-price?start=2015-01-01&ormat=json&timespan=731days"
+	url = "https://api.blockchain.info/charts/market-price?start=2014-01-01&ormat=json&timespan=1096days"
 	return get_response(url)
 
 def getTradeVolume():
-	url = "https://api.blockchain.info/charts/trade-volume?start=2015-01-01&ormat=json&timespan=731days"
+	url = "https://api.blockchain.info/charts/trade-volume?start=2014-01-01&ormat=json&timespan=1096days"
 	return get_response(url)
 
 def getMedianConfirmationTime():
-	url = "https://api.blockchain.info/charts/median-confirmation-time?start=2015-01-01&format=json&timespan=731days"
+	url = "https://api.blockchain.info/charts/median-confirmation-time?start=2014-01-01&format=json&timespan=1096days"
 	return get_response(url)
 
 def getBlocksSize():
-	url = "https://api.blockchain.info/charts/blocks-size?start=2015-01-01&format=json&timespan=731days"
+	url = "https://api.blockchain.info/charts/blocks-size?start=2014-01-01&format=json&timespan=1096days"
 	return get_response(url)
 
 def getCostPerTransactionPercent():
-	url = "https://api.blockchain.info/charts/cost-per-transaction-percent?start=2015-01-01&format=json&timespan=731days"
+	url = "https://api.blockchain.info/charts/cost-per-transaction-percent?start=2014-01-01&format=json&timespan=1096days"
 	return get_response(url)
 
 def getDifficulty():
-	url = "https://api.blockchain.info/charts/miners-revenue?start=2015-01-01&format=json&timespan=731days"
+	url = "https://api.blockchain.info/charts/miners-revenue?start=2014-01-01&format=json&timespan=1096days"
 	return get_response(url)
 
 def getHashRate():
-	url = "https://api.blockchain.info/charts/hash-rate?start=2015-01-01&format=json&timespan=731days"
+	url = "https://api.blockchain.info/charts/hash-rate?start=2014-01-01&format=json&timespan=1096days"
 	return get_response(url)
 
 def getNumberOfTransactionsPerBlock():
-	url = "https://api.blockchain.info/charts/n-transactions-per-block?start=2015-01-01&format=json&timespan=731days"
+	url = "https://api.blockchain.info/charts/n-transactions-per-block?start=2014-01-01&format=json&timespan=1096days"
 	return get_response(url)
 
 def getTotalTransactions():
-	url = "https://api.blockchain.info/charts/n-transactions-total?start=2015-01-01&format=json&timespan=731days"
+	url = "https://api.blockchain.info/charts/n-transactions-total?start=2014-01-01&format=json&timespan=1096days"
 	return get_response(url)
 
 def getTotalAdressesTransactions():
-	url = "https://api.blockchain.info/charts/n-unique-addresses?start=2015-01-01&format=json&timespan=731days"
+	url = "https://api.blockchain.info/charts/n-unique-addresses?start=2014-01-01&format=json&timespan=1096days"
 	return get_response(url)
 
 def getNumberOfCirculatingBitcoin():
-	url = "https://api.blockchain.info/charts/total-bitcoins?start=2015-01-01&format=json&timespan=731days"
+	url = "https://api.blockchain.info/charts/total-bitcoins?start=2014-01-01&format=json&timespan=1096days"
 	return get_response(url)
 
 def getMarketCapetalization():
-	url = "https://api.blockchain.info/charts/market-cap?start=2015-01-01&format=json&timespan=731days"
+	url = "https://api.blockchain.info/charts/market-cap?start=2014-01-01&format=json&timespan=1096days"
 	return get_response(url)
 
 def process_data(save):
@@ -89,7 +97,6 @@ def process_data(save):
 	numberOfcirculatingBitcoins = getNumberOfCirculatingBitcoin()
 	marketCapitalization = getMarketCapetalization()
 	timestamps = marketPriceBTCInUSD.index
-	# import pdb; pdb.set_trace()
 	columns = ['marketPriceBTCInUSD', 'tradeVolume', 'medianConfirmationTime',
 		'blocksSize', 'costPerTransactionPercent', 'difficulty', 'hashRate', 
 		'numberOfTransactionsPerBlock', 'totalTransactions', 
@@ -125,7 +132,7 @@ def process_data(save):
 							index=data[1:,0],
 							columns=data[0,1:])
 	if save:
-		df.to_csv(path_or_buf='blockchain_api_features_2_years.csv', sep=';', header=True, index=True)
+		df.to_csv(path_or_buf='blockchain_api_features_3_years.csv', sep=';', header=True, index=True)
 	else:
 		return df
 
