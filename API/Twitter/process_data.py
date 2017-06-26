@@ -43,7 +43,8 @@ def preprocess_data(save):
 	preprocessed_data = ['Date', 'numberOfPosts', 'numberOfPositive',
 					'numberOfNegative', 'averagePolarity',
 					'averageSubjectivity', 'averageRetweets',
-					'averageFavourites']
+					'retweetsPos', 'retweetsNeg', 'averageFavourites',
+					'favouritesPos', 'favouritesNeg']
 	for single_date in daterange(start_date, end_date):
 		index = single_date.strftime("%d-%m-%Y")
 		today = df.loc[index]
@@ -56,12 +57,18 @@ def preprocess_data(save):
 		polarity_list, subjectivity_list = polarity_list[1:], subjectivity_list[1:]
 
 		numberOfPosts = today.shape[0]
-		numberOfPositive = np.where(polarity_list.astype(np.float) > 0)[0].size
-		numberOfNegative = np.where(polarity_list.astype(np.float) < 0)[0].size
+		posTweets = np.where(polarity_list.astype(np.float) > 0)[0]
+		negTweets = np.where(polarity_list.astype(np.float) < 0)[0]
+		numberOfPositive = posTweets.size
+		numberOfNegative = negTweets.size
 		avg_polarity = np.average(polarity_list.astype(np.float))
 		avg_subjectivity = np.average(subjectivity_list.astype(np.float))
 		averageRetweets = today['retweets'].mean()
+		averageRetweetsPos = today['retweets'][posTweets].mean()
+		averageRetweetsNeg = today['retweets'][negTweets].mean()
 		averageFavorites = today['favorites'].mean()
+		averageFavoritesPos = today['favorites'][posTweets].mean()
+		averageFavoritesNeg = today['favorites'][negTweets].mean()
 
 		preprocessed_data = np.vstack((preprocessed_data, [index, 
 														numberOfPosts,
@@ -70,7 +77,11 @@ def preprocess_data(save):
 														avg_polarity,
 														avg_subjectivity,
 														averageRetweets,
-														averageFavorites
+														averageRetweetsPos,
+														averageRetweetsNeg,
+														averageFavorites,
+														averageFavoritesPos,
+														averageFavoritesNeg
 														]))
 
 	data = pd.DataFrame(data=preprocessed_data[1:,1:],

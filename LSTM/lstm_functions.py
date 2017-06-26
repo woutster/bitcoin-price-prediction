@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
+from sklearn.metrics import precision_recall_fscore_support as score
 
 
 def make_one_hot(array, num_classes):
@@ -196,6 +197,14 @@ def get_data_plots(X):
     make_plot_2(price, nopos, x_axis, y_axis, 'Number of positive posts on reddit', 'No. of positive bitcoin posts on reddit vs bitcoin price')
     make_plot_2(price, noneg, x_axis, y_axis, 'Number of negative posts on reddit', 'No. of negative bitcoin posts on reddit vs bitcoin price')
 
+def calculate_f1(real, pred):
+    precision, recall, fscore, support = score(real, pred, average='macro')
+    print('labels: {}'.format(['Negative', 'Neutral', 'Positive' ]))
+    print('precision: {}'.format(precision))
+    print('recall: {}'.format(recall))
+    print('fscore: {}'.format(fscore))
+    print('support: {}'.format(support))
+    print('')
 
 def get_statistics(model, model_fit, X, train_X, test_X, train_y, test_y, seq_length, kfold, nfolds, showPlots):
     
@@ -204,15 +213,14 @@ def get_statistics(model, model_fit, X, train_X, test_X, train_y, test_y, seq_le
     print("Percentage correct trainset: ", error(np.array(predictions_train), train_y) * 100, "%")
 
     predictions, probabilities = predict(model, test_X, seq_length)
-    predictions = np.roll(np.argmax(test_y, axis=1), 1, axis=0)
+    # predictions = np.roll(np.argmax(test_y, axis=1), 1, axis=0)
 
     accuracy = error(np.array(predictions), test_y) * 100
 
-    print("Real: ", np.argmax(test_y, axis=1))
-    print("Predicted: ", predictions)
-    print("Percentage correct testset: ", accuracy, "%")
-
     if showPlots:
+        print("Real: ", np.argmax(test_y, axis=1))
+        print("Predicted: ", predictions)
+        print("Percentage correct testset: ", accuracy, "%")
         make_prediction_plot(np.argmax(test_y, axis=1), predictions)
         loss = model_fit.history.get('val_loss')
         make_plot(loss, 'Training epochs (in days)', 'Loss', 'Training loss on validation set')
@@ -227,6 +235,7 @@ def get_statistics(model, model_fit, X, train_X, test_X, train_y, test_y, seq_le
         name = 'Confusion matrix of test data consisting of %d days' %len(predictions)
         plot_confusion_matrix(cnf_matrix, class_names, title=name)
         plt.show()
-        get_data_plots(X)
+        calculate_f1(np.argmax(test_y, axis=1), predictions)
+        # get_data_plots(X)
     if kfold:
-        return accuracy
+        return accuracy, score(np.argmax(test_y, axis=1), predictions, average='macro')
